@@ -1,0 +1,97 @@
+
+# Choix chemin sauvegarde
+# *****************************************************************************
+    Write-Host "
+    -----------------------------------------------------------------
+    Quelle est la source de la restauration :
+        1 - Sauvegarde Réseau ou USB
+        2 - Ancien Disque Sytème branché en USB
+    -----------------------------------------------------------------
+    "
+
+$Choix = Read-Host "Quelle n° d'opération voulez-vous effectuer ?"
+# *****************************************************************************
+
+# Restauration depuis une sauvegarde Réseau ou USB
+# *****************************************************************************
+If ($Choix -like 1) {
+
+    #chemin sauvagarde
+    Write-Host "Il faut obligatoirement accéder au dossier de sauvegarde via l'explorateur Windows pour ouvrir les droits" -ForegroundColor Red
+    Write-Host "Coper/coller le chemin de la sauvegarde complète" -ForegroundColor Green
+    Write-Host "exemple \\ssav10-XXX\BACKUP\Robocopy\MXXXXX\Complete ou  D:\Sauvegarde\Robocopy\PXXXXX\Complete"
+    $CheminSauve = read-host "Chemin"
+
+    $CheminSauveUser = $CheminSauve + "\Utilisateurs\"
+
+    #Fichier des exclusions
+    $exclude_savefilepath = ($CheminSauve.ToLower().Replace("\complete","")+"\exclude.rcj")
+    if (!(Test-Path ($exclude_savefilepath))) {
+            Write-Host "Exclude.rcj n'existe pas. Voulez-vous restaurer y compris les fichiers effacés ? y/n" -ForegroundColor Red
+            $RestauFULL = read-host
+            Switch -exact  ($RestauFULL) {
+            "y" {new-item -Path $exclude_savefilepath}
+            "n" {Write-Host "Refaire une sauvegarde complète (StartONF v3.0.5 mini)" -ForegroundColor Red
+                Start-Sleep 10
+                exit
+            }
+            default {Write-Host "Choix inconnu" -ForegroundColor Red
+                Start-Sleep 10
+                exit}
+            }
+    }
+    
+    <#
+    #Remplace les éventuelles IP de exclude.rcj par le nom du serveur
+    $Serveur = $CheminSauve.replace('\\','').Substring(0,$CheminSauve.replace('\\','').IndexOf('\'))
+    $IpServeur = (Test-NetConnection $Serveur).RemoteAddress.IPAddressToString
+    (Get-Content $exclude_filepath) | Foreach-Object {$_ -replace $IpServeur, $Serveur} | Set-Content $exclude_filepath
+    #>
+
+    #exclude.rcj remplace la chaine unique du chemin par la source de la sauvegarde
+
+    $exclude_filepath = "c:\admintools\log\restauration\exclude.rcj"
+    if (!(Test-Path $exclude_filepath)) {New-Item -path $exclude_filepath -ItemType file}
+   
+    Get-Content $exclude_savefilepath | Foreach-Object {$_ -replace 'ChaineTempoCheminDestination', $CheminSauve} | Set-Content $exclude_filepath
+    
+
+    #Incrementielle
+    Write-Host "Voulez-vous y appliquer les incrémentielles postérieures à la complète ?" -ForegroundColor Green
+    $ChoixIncrémentielles = read-host "Y/N"
+
+    $AppDataSignature = "\AppData_Roaming_Microsoft_Signatures"
+    $AppDataMozilla = "\AppData_Roaming_Mozilla"
+    $AppDataOutlook = "\AppData_Roaming_Microsoft_Outlook"
+    $AppDataForms = "\AppData_Local_Microsoft_Forms"
+    $AppDataTemplates = "\AppData_Roaming_Microsoft_Templates"
+    $AppDataUProof = "\AppData_Roaming_Microsoft_UProof"
+    $AppDataGoogleEarth = "\AppData_localLow_Google_GoogleEarth"
+    $AppDataSpelling = "\AppData_Roaming_Microsoft_Spelling"
+
+}
+
+
+
+# Restauration USB en branchant directement l'ancien disque
+# *****************************************************************************
+If ($Choix -like 2) {
+
+    $DriveSauve = (Get-volume | ? FileSystemLabel -like "SYSTEME" | ? DriveLetter -NotLike "C").DriveLetter
+    $CheminSauveUser = $DriveSauve+":\Users\"
+    $CheminSauve = $DriveSauve+":\Donnees\"
+
+    #Fichier des exclusions (vide)
+    $exclude_filepath = "C:\Temp\exclude.rcj"
+    new-item -Path $exclude_filepath
+
+    $AppDataSignature = "\AppData\Roaming\Microsoft\Signatures"
+    $AppDataMozilla = "\AppData\Roaming\Mozilla"
+    $AppDataOutlook = "\AppData\Roaming\Microsoft\Outlook"
+    $AppDataForms = "\AppData\Local\Microsoft\FORMS"
+    $AppDataTemplates = "\AppData\Roaming\Microsoft\Templates"
+    $AppDataUProof = "\AppData\Roaming\Microsoft\UProof"
+    $AppDataGoogleEarth = "\AppData\LocalLow\Google\GoogleEarth"
+    $AppDataSpelling = "\AppData\Roaming\Microsoft\Spelling"
+
+}
