@@ -1,16 +1,16 @@
 ###############################################################################
 # Description      : Script de Restauration des données (pour changement de poste)
-#                    
+
+# DES MORCEAUX DE SCRIPT ONT ETES ENLEVES POUR CAUSE DE CONFIDENTIALITE
+
 
 # Lancement en admin uniquement
 # *****************************************************************************
-
 
 #Récupération Nom du pc 
 # *****************************************************************************
 $netbios = $env:computername | Select-Object
 # *****************************************************************************
-
 
 # Choix chemin sauvegarde
 # *****************************************************************************
@@ -54,7 +54,6 @@ If ($Choix -like 1) {
     $AppDataSpelling = "\AppData_Roaming_Microsoft_Spelling"
 
 }
-
 
 
 # Restauration USB en branchant directement l'ancien disque
@@ -149,7 +148,7 @@ elseif($rep -like "Y"){
     $LDAPsauve = $LDAP
 }
 
-#******************************************************************************
+
 #E-mail de Fin
 # *****************************************************************************
 $ChoixMail = read-host "Voulez-vous recevoir un mail de fin de copie  ? (Y/N)"
@@ -167,7 +166,6 @@ If ($ChoixMail -like "y"){
     $ChoixMaildest = $MailsList.item($ChoixMaildest)
 }
 
-# *****************************************************************************
 
 #Copies
 # *****************************************************************************
@@ -189,9 +187,6 @@ If ($ChoixMail -like "y"){
 If (Test-Path ($CheminSauveUser+$AppDataGoogleEarth)) {
     robocopy.exe $CheminSauveUser$AppDataGoogleEarth $CheminRestauUser"\AppData\localLow\Google\GoogleEarth" /e /r:5 /w:10 /TEE  /JOB:$exclude_filepath /unilog:c:\admintools\Log\restauration\AppData_LocalLow_Google_GoogleEarth.log    
 }
-#Spelling
-If (Test-Path ($CheminSauveUser+$AppDataSpelling)) {
-    robocopy.exe $CheminSauveUser$AppDataSpelling $CheminRestauUser"\AppData\Roaming\Microsoft\Spelling" /e /r:5 /w:10 /TEE  /JOB:$exclude_filepath /unilog:c:\admintools\Log\restauration\AppData_Roaming_Microsoft_Spelling.log
 }
 
 #Bureau
